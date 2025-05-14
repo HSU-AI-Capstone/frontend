@@ -12,7 +12,7 @@ const Navbar: React.FC<NavbarProps> = ({ activeTab, onTabChange }) => {
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center">
           <Video className="h-6 w-6 text-blue-600" />
-          <h1 className="ml-2 text-xl font-semibold text-gray-800">EduVid</h1>
+          <h1 className="ml-2 text-xl font-semibold text-gray-800">AIcademy</h1>
         </div>
         
         <nav className="flex space-x-1">
