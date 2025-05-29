@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { professors, videos } from './data/mockData';
 import { Video, VideoFormData, VideoEditData } from './types';
 import Navbar from './components/Navbar';
 import VideoGrid from './components/VideoGrid';
 import CreateVideo from './components/CreateVideo';
 import VideoPlayer from './components/VideoPlayer';
+import { lectureApi } from './services/api';
 
 function App() {
   const [activeTab, setActiveTab] = useState<'watch' | 'create'>('watch');
-  const [currentVideos, setCurrentVideos] = useState<Video[]>(videos);
+  const [currentVideos, setCurrentVideos] = useState<Video[]>([]);
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
   const [editingVideo, setEditingVideo] = useState<VideoEditData | undefined>();
   
@@ -20,22 +21,66 @@ function App() {
     ? professors.find(p => p.id === selectedVideo.professorId) 
     : null;
 
-  const handleCreateVideo = (formData: VideoFormData) => {
-    const newVideo: Video = {
-      id: `vid${currentVideos.length + 1}`,
-      title: formData.title,
-      description: formData.description,
-      professorId: formData.professorId,
-      thumbnailUrl: 'https://images.pexels.com/photos/3861958/pexels-photo-3861958.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=250',
-      videoUrl: '#',
-      duration: Math.floor(Math.random() * (3600 - 600) + 600),
-      createdAt: new Date(),
-      views: 0
+  // 컴포넌트가 마운트될 때 비디오 목록을 가져옴
+  useEffect(() => {
+    const fetchVideos = async () => {
+      try {
+        const response = await lectureApi.getVideos();
+        console.log('받은 응답:', response);
+        
+        if (response && response.results && Array.isArray(response.results)) {  // results 배열 확인
+          const formattedVideos = response.results.map((video) => ({
+            id: video.id.toString(),
+            title: video.title,
+            description: '', 
+            professorId: video.professor,
+            thumbnailUrl: 'https://images.pexels.com/photos/3861958/pexels-photo-3861958.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=250',
+            videoUrl: video.video_url,
+            duration: 0,  // 서버에서 제공하지 않는 경우 기본값
+            createdAt: new Date(video.created_at),
+            views: video.view_count
+          }));
+          console.log('변환된 비디오:', formattedVideos);
+          setCurrentVideos(formattedVideos);
+        } else {
+          console.error('예상치 못한 응답 형식:', response);
+          setCurrentVideos([]);
+        }
+      } catch (error) {
+        console.error('비디오 목록을 가져오는데 실패했습니다:', error);
+        setCurrentVideos([]);
+      }
     };
-    
-    setCurrentVideos(prev => [newVideo, ...prev]);
-    alert('Video created successfully! You can now view it in the Watch tab.');
-    setActiveTab('watch');
+
+    fetchVideos();
+  }, []);
+
+  const handleCreateVideo = async (formData: VideoFormData) => {
+    try {
+      const response = await lectureApi.uploadLecture(formData);
+      if (response && response.data) {
+        // 비디오 목록 새로고침
+        const videosResponse = await lectureApi.getVideos();
+        if (videosResponse && videosResponse.data) {
+          const formattedVideos = videosResponse.data.results.map((video: any) => ({
+            id: video.id.toString(),
+            title: video.title,
+            description: '',
+            professorId: video.professor,
+            thumbnailUrl: 'https://images.pexels.com/photos/3861958/pexels-photo-3861958.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=250',
+            videoUrl: video.video_url,
+            duration: 0,
+            createdAt: new Date(video.created_at),
+            views: video.view_count
+          }));
+          setCurrentVideos(formattedVideos);
+        }
+        alert('Video created successfully!');
+        setActiveTab('watch');
+      }
+    } catch (error) {
+      console.error('비디오 생성에 실패했습니다:', error);
+    }
   };
 
   const handleEditVideo = (videoId: string) => {
