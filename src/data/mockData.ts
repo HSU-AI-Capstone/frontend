@@ -3,24 +3,24 @@ import { Professor, Video } from '../types';
 export const professors: Professor[] = [
   {
     id: 'prof1',
-    name: 'Dr. Emily Chen',
-    avatar: 'https://images.pexels.com/photos/5212317/pexels-photo-5212317.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=150',
-    specialty: 'Computer Science',
-    bio: 'Dr. Chen specializes in artificial intelligence and machine learning. She has published numerous papers on deep learning algorithms.'
+    name: 'DAWOON',
+    avatar: 'https://cdn-icons-png.flaticon.com/512/3584/3584411.png',
+    specialty: '',
+    bio: 'AIcademy 팀원인 김다운 학생의 음성으로 생성'
   },
   {
     id: 'prof2',
-    name: 'Prof. Michael Rodriguez',
-    avatar: 'https://images.pexels.com/photos/8090137/pexels-photo-8090137.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=150',
-    specialty: 'Data Science',
-    bio: 'Professor Rodriguez is an expert in data visualization and statistical analysis, with a focus on making complex data accessible.'
+    name: 'JI JUN',
+    avatar: 'https://i.ytimg.com/vi/3Phhbkk7lk8/maxresdefault.jpg?sqp=-oaymwEmCIAKENAF8quKqQMa8AEB-AH-CYAC0AWKAgwIABABGE8gXShlMA8=&rs=AOn4CLDI9AU_AV6xn5RxU1EoNoDtRSjzIw',
+    specialty: '',
+    bio: 'AIcademy 팀의 지도교수 지준 교수님의 음성으로 생성'
   },
   {
     id: 'prof3',
-    name: 'Dr. Sarah Johnson',
-    avatar: 'https://images.pexels.com/photos/5878503/pexels-photo-5878503.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=150',
-    specialty: 'Physics',
-    bio: 'Dr. Johnson researches quantum computing and theoretical physics. Her lectures are known for making difficult concepts understandable.'
+    name: 'IU',
+    avatar: 'https://cdn.spotvnews.co.kr/news/photo/202409/704412_1101896_1119.jpg',
+    specialty: '',
+    bio: '대한민국 No.1 싱어송라이터 아이유의 음성으로 생성'
   }
 ];
 
