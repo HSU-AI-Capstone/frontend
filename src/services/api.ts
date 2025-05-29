@@ -88,4 +88,30 @@ export const lectureApi = {
       return handleApiError(error as AxiosError);
     }
   },
+
+  getVideos: async () => {
+    try {
+      // GET 메소드로 변경하고 쿼리 파라미터 추가
+      const response = await api.get('/api/v1/test/lectures/', {
+        params: {
+          page: 1,
+          page_size: 100  // 최대 개수로 설정
+        }
+      });
+      
+      console.log('서버 응답:', response.data);
+      return response.data;  // 응답은 Lecture[] 타입의 배열
+    } catch (error) {
+      console.error('API 에러 상세:', error);
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          console.error('서버 응답 데이터:', error.response.data);
+          throw new Error(error.response.data.detail || '서버 오류가 발생했습니다.');
+        } else if (error.request) {
+          throw new Error('서버에 연결할 수 없습니다.');
+        }
+      }
+      throw new Error('비디오 목록을 가져오는데 실패했습니다.');
+    }
+  },
 }; 
