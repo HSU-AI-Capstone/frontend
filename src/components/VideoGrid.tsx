@@ -7,15 +7,13 @@ interface VideoGridProps {
   videos: Video[];
   professors: Professor[];
   onVideoPlay: (videoId: string) => void;
-  onVideoEdit: (videoId: string) => void;
   onVideoDelete: (videoId: string) => void;
 }
 
-const VideoGrid: React.FC<VideoGridProps> = ({ 
-  videos, 
-  professors, 
+const VideoGrid: React.FC<VideoGridProps> = ({
+  videos,
+  professors,
   onVideoPlay,
-  onVideoEdit,
   onVideoDelete
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,19 +22,19 @@ const VideoGrid: React.FC<VideoGridProps> = ({
 
   useEffect(() => {
     let results = videos;
-    
+
     if (selectedProfessorId !== 'all') {
       results = results.filter(video => video.professorId === selectedProfessorId);
     }
-    
+
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
-      results = results.filter(video => 
-        video.title.toLowerCase().includes(term) || 
+      results = results.filter(video =>
+        video.title.toLowerCase().includes(term) ||
         video.description.toLowerCase().includes(term)
       );
     }
-    
+
     setFilteredVideos(results);
   }, [videos, searchTerm, selectedProfessorId]);
 
@@ -49,7 +47,7 @@ const VideoGrid: React.FC<VideoGridProps> = ({
       <div className="mb-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <h2 className="text-2xl font-semibold text-gray-800">Video Lectures</h2>
-          
+
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
@@ -61,7 +59,7 @@ const VideoGrid: React.FC<VideoGridProps> = ({
             />
           </div>
         </div>
-        
+
         <div className="flex flex-wrap gap-2 mb-6">
           <button
             onClick={() => setSelectedProfessorId('all')}
@@ -73,7 +71,7 @@ const VideoGrid: React.FC<VideoGridProps> = ({
           >
             All Videos
           </button>
-          
+
           {professors.map(professor => (
             <button
               key={professor.id}
@@ -89,7 +87,7 @@ const VideoGrid: React.FC<VideoGridProps> = ({
           ))}
         </div>
       </div>
-      
+
       {filteredVideos.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500 text-lg">No videos found matching your criteria.</p>
@@ -102,7 +100,6 @@ const VideoGrid: React.FC<VideoGridProps> = ({
               video={video}
               professor={getProfessorById(video.professorId)}
               onPlay={onVideoPlay}
-              onEdit={onVideoEdit}
               onDelete={onVideoDelete}
             />
           ))}
