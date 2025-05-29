@@ -8,7 +8,7 @@ import type {
 } from '../types/lecture';
 
 // API 기본 설정
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = 'https://api.ai-cademy.store/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
