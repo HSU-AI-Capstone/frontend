@@ -1,25 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Pause, Volume2, VolumeX, X } from 'lucide-react';
-import { Video, Professor } from '../types';
+import type { Lecture } from '../types/lecture';
 import { formatDuration } from '../utils/formatters';
 
 interface VideoPlayerProps {
-  video: Video;
-  professor: Professor;
+  lecture: Lecture;
   onClose: () => void;
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, professor, onClose }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({ lecture, onClose }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
-
-  // Sample video URLs for demonstration
-  const sampleVideos = [
-    'https://storage.googleapis.com/webfundamentals-assets/videos/chrome.mp4',
-    'https://storage.googleapis.com/webfundamentals-assets/videos/chrome.webm'
-  ];
 
   useEffect(() => {
     let progressInterval: number;
@@ -27,7 +20,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, professor, onClose }) 
     if (isPlaying) {
       progressInterval = window.setInterval(() => {
         setProgress(prev => {
-          const newProgress = prev + (100 / video.duration) * 0.1;
+          const newProgress = prev + (100 / lecture.duration) * 0.1;
           if (newProgress >= 100) {
             setIsPlaying(false);
             return 0;
@@ -37,7 +30,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, professor, onClose }) 
 
         setCurrentTime(prev => {
           const newTime = prev + 0.1;
-          if (newTime >= video.duration) {
+          if (newTime >= lecture.duration) {
             return 0;
           }
           return newTime;
@@ -50,7 +43,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, professor, onClose }) 
         clearInterval(progressInterval);
       }
     };
-  }, [isPlaying, video.duration]);
+  }, [isPlaying, lecture.duration]);
 
   const togglePlay = () => {
     setIsPlaying(!isPlaying);
@@ -65,7 +58,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, professor, onClose }) 
     const x = e.clientX - rect.left;
     const clickedProgress = (x / rect.width) * 100;
     setProgress(clickedProgress);
-    setCurrentTime((clickedProgress / 100) * video.duration);
+    setCurrentTime((clickedProgress / 100) * lecture.duration);
   };
 
   return (
@@ -74,14 +67,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, professor, onClose }) 
         <div className="relative">
           <video
             className="w-full aspect-video bg-black"
-            poster={video.thumbnailUrl}
-            muted={isMuted}
-            autoPlay={isPlaying}
-            src={sampleVideos[0]}
+            src={lecture.video_url}
+            controls
+            autoPlay
           >
-            {sampleVideos.map((url, index) => (
-              <source key={index} src={url} />
-            ))}
             Your browser does not support the video tag.
           </video>
           
@@ -104,7 +93,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, professor, onClose }) 
                 </button>
                 
                 <span className="text-white text-sm">
-                  {formatDuration(Math.floor(currentTime))} / {formatDuration(video.duration)}
+                  {formatDuration(Math.floor(currentTime))} / {formatDuration(lecture.duration)}
                 </span>
               </div>
               
@@ -131,16 +120,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ video, professor, onClose }) 
         
         {/* Video Info */}
         <div className="p-4">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">{video.title}</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">{lecture.title}</h2>
           <div className="flex items-center mb-3">
-            <img 
-              src={professor.avatar} 
-              alt={professor.name} 
-              className="w-8 h-8 rounded-full mr-2"
-            />
-            <span className="text-gray-700">{professor.name}</span>
+            <span className="text-gray-700">{lecture.professor}</span>
           </div>
-          <p className="text-gray-600">{video.description}</p>
+          <p className="text-gray-600">조회수: {lecture.view_count}</p>
+          <p className="text-gray-600">업로드일: {new Date(lecture.created_at).toLocaleDateString()}</p>
         </div>
       </div>
     </div>

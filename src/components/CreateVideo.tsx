@@ -1,41 +1,45 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Upload, X, FileText, Eye } from 'lucide-react';
-import { Professor, VideoFormData, VideoEditData } from '../types';
+import type { Professor, VideoFormData, VideoEditData } from '../types/lecture';
+import { lectureApi } from '../services/api';
 import ProfessorCard from './ProfessorCard';
+import VideoCard from './VideoCard';
+import VideoGrid from './components/VideoGrid';
 
 interface CreateVideoProps {
   professors: Professor[];
-  onSubmit: (formData: VideoFormData) => void;
+  onSuccess?: () => void;
   editData?: VideoEditData;
   onCancel?: () => void;
 }
 
 const CreateVideo: React.FC<CreateVideoProps> = ({ 
   professors, 
-  onSubmit, 
+  onSuccess,
   editData,
   onCancel 
 }) => {
   const [formData, setFormData] = useState<VideoFormData>({
-    title: '',
+    subject: '',
     description: '',
-    professorId: '',
-    pdfFile: null
+    professor: '',
+    file: null
   });
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load edit data if provided
   useEffect(() => {
     if (editData) {
       setFormData({
-        title: editData.title,
+        subject: editData.title,
         description: editData.description,
-        professorId: editData.professorId,
-        pdfFile: null
+        professor: editData.professorId,
+        file: null
       });
     }
   }, [editData]);
@@ -46,23 +50,23 @@ const CreateVideo: React.FC<CreateVideoProps> = ({
   };
 
   const handleProfessorSelect = (professorId: string) => {
-    setFormData(prev => ({ ...prev, professorId }));
+    setFormData(prev => ({ ...prev, professor: professorId }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       if (file.type === 'application/pdf') {
-        setFormData(prev => ({ ...prev, pdfFile: file }));
+        setFormData(prev => ({ ...prev, file }));
         setFilePreview(URL.createObjectURL(file));
       } else {
-        alert('Please upload a PDF file');
+        setError('PDF 파일만 업로드할 수 있습니다.');
       }
     }
   };
 
   const removeFile = () => {
-    setFormData(prev => ({ ...prev, pdfFile: null }));
+    setFormData(prev => ({ ...prev, file: null }));
     if (filePreview) {
       URL.revokeObjectURL(filePreview);
       setFilePreview(null);
@@ -76,47 +80,90 @@ const CreateVideo: React.FC<CreateVideoProps> = ({
     setShowPdfPreview(!showPdfPreview);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('폼 제출 시작');
+    setError(null);
     
-    if (!formData.title.trim()) {
-      alert('Please enter a title');
+    console.log('현재 폼 데이터:', formData);
+    
+    if (!formData.subject.trim()) {
+      console.log('제목 누락');
+      setError('제목을 입력해주세요.');
       return;
     }
     
     if (!formData.description.trim()) {
-      alert('Please enter a description');
+      console.log('설명 누락');
+      setError('설명을 입력해주세요.');
       return;
     }
     
-    if (!formData.professorId) {
-      alert('Please select a professor');
+    if (!formData.professor) {
+      console.log('교수 선택 누락');
+      setError('교수를 선택해주세요.');
       return;
     }
     
-    if (!formData.pdfFile && !editData) {
-      alert('Please upload a PDF file');
+    if (!formData.file) {
+      console.log('파일 누락');
+      setError('PDF 파일을 업로드해주세요.');
       return;
     }
-    
-    setIsProcessing(true);
-    
-    setTimeout(() => {
-      onSubmit(formData);
-      setIsProcessing(false);
+
+    try {
+      setIsProcessing(true);
+      console.log('강의 업로드 시작:', formData);
       
-      setFormData({
-        title: '',
-        description: '',
-        professorId: '',
-        pdfFile: null
+      // FormData 객체 생성 및 데이터 추가
+      const uploadData = new FormData();
+      uploadData.append('subject', formData.subject);
+      uploadData.append('description', formData.description);
+      uploadData.append('professor', formData.professor);
+      uploadData.append('file', formData.file);
+      
+      console.log('업로드할 데이터:', {
+        subject: formData.subject,
+        description: formData.description,
+        professor: formData.professor,
+        fileName: formData.file.name
       });
       
+      console.log('API 호출 시작');
+      const response = await lectureApi.uploadLecture(formData);
+      console.log('API 응답:', response);
+      
+      // 성공 후 폼 초기화
+      setFormData({
+        subject: '',
+        description: '',
+        professor: '',
+        file: null
+      });
       if (filePreview) {
         URL.revokeObjectURL(filePreview);
         setFilePreview(null);
       }
-    }, 2000);
+      
+      console.log('업로드 성공, onSuccess 호출');
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (err: any) {
+      console.error('강의 업로드 실패:', err);
+      if (err.response) {
+        console.error('서버 응답:', err.response.data);
+        setError(err.response.data.message || '서버 오류가 발생했습니다.');
+      } else if (err.request) {
+        console.error('서버 응답 없음:', err.request);
+        setError('서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.');
+      } else {
+        console.error('요청 에러:', err.message);
+        setError('요청을 처리하는 중 오류가 발생했습니다.');
+      }
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
@@ -138,14 +185,14 @@ const CreateVideo: React.FC<CreateVideoProps> = ({
         
         <form onSubmit={handleSubmit}>
           <div className="mb-5">
-            <label htmlFor="title" className="block text-gray-700 font-medium mb-2">
+            <label htmlFor="subject" className="block text-gray-700 font-medium mb-2">
               Title
             </label>
             <input
               type="text"
-              id="title"
-              name="title"
-              value={formData.title}
+              id="subject"
+              name="subject"
+              value={formData.subject}
               onChange={handleInputChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
               placeholder="Enter video title"
@@ -176,7 +223,7 @@ const CreateVideo: React.FC<CreateVideoProps> = ({
                 <ProfessorCard
                   key={professor.id}
                   professor={professor}
-                  isSelected={professor.id === formData.professorId}
+                  isSelected={professor.id === formData.professor}
                   onSelect={handleProfessorSelect}
                 />
               ))}
@@ -188,18 +235,18 @@ const CreateVideo: React.FC<CreateVideoProps> = ({
               {editData ? 'Update PDF' : 'Upload PDF'}
             </label>
             
-            {!formData.pdfFile ? (
+            {!formData.file ? (
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
                 <input
                   type="file"
-                  id="pdfFile"
+                  id="file"
                   ref={fileInputRef}
                   accept=".pdf"
                   onChange={handleFileChange}
                   className="hidden"
                 />
                 <label
-                  htmlFor="pdfFile"
+                  htmlFor="file"
                   className="flex flex-col items-center justify-center cursor-pointer"
                 >
                   <Upload className="h-12 w-12 text-gray-400 mb-2" />
@@ -218,9 +265,9 @@ const CreateVideo: React.FC<CreateVideoProps> = ({
                   <div className="flex items-center flex-1">
                     <FileText className="h-8 w-8 text-blue-600 mr-3" />
                     <div className="flex-1">
-                      <p className="text-gray-800 font-medium">{formData.pdfFile.name}</p>
+                      <p className="text-gray-800 font-medium">{formData.file.name}</p>
                       <p className="text-gray-500 text-sm">
-                        {(formData.pdfFile.size / 1024 / 1024).toFixed(2)} MB
+                        {(formData.file.size / 1024 / 1024).toFixed(2)} MB
                       </p>
                     </div>
                   </div>
