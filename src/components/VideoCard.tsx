@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useState } from 'react';
 import { Play, Edit, Trash2 } from 'lucide-react';
 import { Video, Professor } from '../types';
 import { formatDuration, formatViews, formatDate } from '../utils/formatters';
@@ -12,6 +12,15 @@ interface VideoCardProps {
 }
 
 const VideoCard: React.FC<VideoCardProps> = ({ video, professor, onPlay, onEdit, onDelete }) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [duration, setDuration] = useState<number>(video.duration);
+
+  const handleVideoLoad = () => {
+    if (videoRef.current) {
+      setDuration(videoRef.current.duration);
+    }
+  };
+
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (confirm('Are you sure you want to delete this video?')) {
@@ -25,57 +34,44 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, professor, onPlay, onEdit,
   };
 
   return (
-    <div 
-      className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow duration-300 cursor-pointer group"
-      onClick={() => onPlay(video.id)}
-    >
-      <div className="relative">
-        <img 
-          src={video.thumbnailUrl} 
-          alt={video.title} 
-          className="w-full h-40 object-cover"
+    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="relative pt-[56.25%]"> {/* 16:9 비율 */}
+        <video
+          ref={videoRef}
+          className="absolute inset-0 w-full h-full object-cover"
+          src={video.videoUrl}
+          poster={video.thumbnailUrl}
+          onLoadedMetadata={handleVideoLoad}
+          preload="metadata"
         />
-        <div className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs px-2 py-1 rounded">
-          {formatDuration(video.duration)}
-        </div>
-        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 transition-opacity duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-          <div className="w-12 h-12 rounded-full bg-white bg-opacity-80 flex items-center justify-center">
-            <Play className="h-6 w-6 text-blue-700" />
-          </div>
-        </div>
-        
-        {/* Edit and Delete buttons */}
-        <div className="absolute top-2 right-2 flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="absolute inset-0 bg-black bg-opacity-0 hover:bg-opacity-30 transition-opacity flex items-center justify-center">
           <button
-            onClick={handleEdit}
-            className="p-2 bg-white rounded-full hover:bg-blue-100 transition-colors"
+            onClick={() => onPlay(video.id)}
+            className="text-white opacity-0 hover:opacity-100 transition-opacity"
           >
-            <Edit className="h-4 w-4 text-blue-600" />
-          </button>
-          <button
-            onClick={handleDelete}
-            className="p-2 bg-white rounded-full hover:bg-red-100 transition-colors"
-          >
-            <Trash2 className="h-4 w-4 text-red-600" />
+            <Play className="h-12 w-12" />
           </button>
         </div>
       </div>
       
       <div className="p-4">
-        <div className="flex items-start space-x-3">
-          <img 
-            src={professor.avatar} 
-            alt={professor.name} 
-            className="w-8 h-8 rounded-full object-cover"
-          />
-          <div className="flex-1 min-w-0">
-            <h3 className="text-gray-900 font-semibold text-md mb-1 line-clamp-2">{video.title}</h3>
-            <p className="text-gray-600 text-sm">{professor.name}</p>
-            <div className="flex items-center text-gray-500 text-xs mt-1">
-              <span>{formatViews(video.views)}</span>
-              <span className="mx-1">•</span>
-              <span>{formatDate(video.createdAt)}</span>
-            </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-1 line-clamp-2">{video.title}</h3>
+        <p className="text-sm text-gray-600 mb-2">{professor.name}</p>
+        <div className="flex items-center justify-between text-sm text-gray-500">
+          <span>{formatDuration(Math.floor(duration))}</span>
+          <div className="flex space-x-2">
+            <button
+              onClick={handleEdit}
+              className="text-gray-600 hover:text-blue-600 transition-colors"
+            >
+              <Edit className="h-4 w-4" />
+            </button>
+            <button
+              onClick={handleDelete}
+              className="text-gray-600 hover:text-red-600 transition-colors"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </div>
